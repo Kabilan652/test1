@@ -142,45 +142,50 @@ const DiseaseDetection: React.FC = () => {
   };
 
   const analyzePlant = async () => {
-    if (!selectedFile) return;
+  if (!selectedFile) return;
 
-    setIsLoading(true);
-    setError(null);
+  setIsLoading(true);
+  setError(null);
+  setPrediction(null); // clear previous result
 
-    try {
-      const formData = new FormData();
-      formData.append("image", selectedFile);
+  try {
+    const formData = new FormData();
+    formData.append("image", selectedFile);
 
-      const response = await axios.post(
-        "http://127.0.0.1:8000/predict",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+    const response = await axios.post(
+      "http://127.0.0.1:8000/predict",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
 
-      const data = response.data;
+    const data = response.data;
 
-      if (data.error) {
-        setError(data.error);
-        setPrediction(null);
-      } else {
+    if (data.error) {
+      setError(data.error);
+      setPrediction(null);
+      setIsLoading(false); // stop loading immediately if error
+    } else {
+      // Delay showing result AND keep spinner visible
+      setTimeout(() => {
         setPrediction({
           diseaseName: data.diseaseName,
           confidence: data.confidence,
           severity: data.severity,
           solutionTips: getSolutionTips(data.diseaseName),
         });
-      }
-    } catch (err: any) {
-      console.error(err.response || err);
-      setError(
-        "Failed to analyze image. Make sure Flask server is running on port 8000"
-      );
-    } finally {
-      setIsLoading(false);
+        setIsLoading(false); // stop loading after showing result
+      }, 3000); // 2 seconds delay
     }
-  };
+  } catch (err: any) {
+    console.error(err.response || err);
+    setError(
+      "Failed to analyze image. Make sure Flask server is running on port 8000"
+    );
+    setIsLoading(false); // stop loading on error
+  }
+};
+
+
 
   const reset = () => {
     setSelectedFile(null);
@@ -348,79 +353,90 @@ const DiseaseDetection: React.FC = () => {
 
               {/* Results */}
               <div className="col-lg-6">
-                <AnimatePresence>
-                  {prediction && (
-                    <motion.div
-                      key="results"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      className="card p-4"
-                    >
-                      <div className="d-flex justify-content-between mb-4">
-                        <h5 className="fw-bold mb-0">🎯 Analysis Results</h5>
-                        <span
-                          className={`badge ${getSeverityBg(
-                            prediction.severity
-                          )} ${getSeverityColor(prediction.severity)}`}
-                        >
-                          {prediction.severity.toUpperCase()}
-                        </span>
-                      </div>
+               
+              {/* Loading spinner */}
+              {isLoading && !prediction && (
+                <motion.div
+                key="loading"
+                initial={{ opacity: 0}}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0}}
+                className="p-4 d-flex justify-content-center align-items-center"
+                style={{ minHeight: "300px" }}
+                // no background color
+                >
+                <div className="spinner-border text-dark me-3" role="status">
+                
+                </div>
+          
+                <p className="fw-bold ms-2 mb-0">Analyzing...</p>
+                </motion.div>
 
-                      <div className="mb-4">
-                        <div className="d-flex align-items-center mb-2">
-                          {prediction.diseaseName === "Healthy Plant" ? (
-                            <CheckCircle
-                              className="text-green-500 me-2"
-                              size={24}
-                            />
-                          ) : (
-                            <AlertCircle
-                              className="text-yellow-500 me-2"
-                              size={24}
-                            />
-                          )}
-                          <h6 className="fw-bold mb-0">
-                            {prediction.diseaseName}
-                          </h6>
-                        </div>
+              )}
 
-                        <div className="mb-3">
-                          <div className="d-flex justify-content-between align-items-center mb-1">
-                            <span className="small text-gray-600">
-                              Confidence
-                            </span>
-                            <span className="fw-bold">
-                              {prediction.confidence}%
-                            </span>
-                          </div>
-                          <ConfidenceBar confidence={prediction.confidence} />
-                        </div>
-                      </div>
+              {/* Prediction Result */}
+              {prediction && (
+                <div
+                key="results"
+                className={`card p-4 border ${
+                  prediction.severity === "low"
+                    ? "bg-green-100 border-green-200"
+                    : prediction.severity === "medium"
+                    ? "bg-yellow-100 border-yellow-200"
+                    : "bg-red-100 border-red-200"
+                }`}
+              >
+                <div className="d-flex justify-content-between mb-4">
+                  <h5 className="fw-bold mb-0">🎯 Analysis Results</h5>
+                  <span
+                    className={`badge ${getSeverityBg(prediction.severity)} ${getSeverityColor(
+                      prediction.severity
+                    )}`}
+                  >
+                    {prediction.severity.toUpperCase()}
+                  </span>
+                </div>
 
-                      <div>
-                        <h6 className="fw-bold mb-3">💡 Recommended Actions</h6>
-                        <ul className="list-unstyled">
-                          {prediction.solutionTips.map((tip, i) => (
-                            <li key={i} className="mb-2">
-                              <span className="tick">✓</span> {tip}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                <div className="mb-4">
+                  <div className="d-flex align-items-center mb-2">
+                    {prediction.diseaseName === "Healthy Plant" ? (
+                      <CheckCircle className="text-green-500 me-2" size={24} />
+                    ) : (
+                      <AlertCircle className="text-yellow-500 me-2" size={24} />
+                    )}
+                    <h6 className="fw-bold mb-0">{prediction.diseaseName}</h6>
+                  </div>
 
-                      <div className="d-grid gap-2 mt-4">
-                        <button
-                          className="btn btn-outline-secondary"
-                          onClick={reset}
-                        >
-                          Analyze Another Plant
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  <div className="mb-3">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <span className="small text-gray-600">Confidence</span>
+                      <span className="fw-bold">{prediction.confidence}%</span>
+                    </div>
+                    <ConfidenceBar confidence={prediction.confidence} />
+                  </div>
+                </div>
+
+                <div>
+                  <h6 className="fw-bold mb-3">💡 Recommended Actions</h6>
+                  <ul className="list-unstyled">
+                    {prediction.solutionTips.map((tip, i) => (
+                      <li key={i} className="mb-2">
+                        <span className="tick">✓</span> {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="d-grid gap-2 mt-4">
+                  <button className="btn btn-outline-secondary" onClick={reset}>
+                    Analyze Another Plant
+                  </button>
+                </div>
+              </div>
+
+              )}
+            
+
               </div>
             </div>
           </div>

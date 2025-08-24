@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -6,6 +5,7 @@ import DiseaseDetection from './pages/DiseaseDetection';
 import Community from './pages/Community';
 import Footer from './components/Footer';
 import './components/style.css';
+import ChatBot from './components/ChatBot';
 
 function App() {
   return (
@@ -18,6 +18,8 @@ function App() {
           <Route path="/community" element={<Community />} />
         </Routes>
         <Footer />
+           {/* ChatBot fixed on every page */}
+        <ChatBot />
       </div>
     </Router>
   );

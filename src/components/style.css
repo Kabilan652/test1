@@ -317,3 +317,28 @@
   font-weight: bold;
   margin-right: 6px;
 }
+.chat-input::placeholder {
+  color: #ffffff; /* white placeholder */
+  opacity: 1;     /* ensures full visibility */
+}
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 6px; /* optional for smooth background */
+  padding: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.close-btn:hover {
+  background-color: red; /* 🔴 background turns red */
+  color: #fff; /* keep the X white on hover */
+  padding: 4px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.test{
+  background-color: red;
+}

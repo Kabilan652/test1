@@ -2,10 +2,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Play } from 'lucide-react';
+import './style.css';
+
 
 const HeroSection: React.FC = () => {
   return (
-    <section className="rootly-hero d-flex align-items-center position-relative">
+    <section className="rootly-hero d-flex align-items-center position-relative ">
       <div className="container position-relative">
         <div className="row justify-content-center text-center">
           <div className="col-lg-8">
